@@ -42,7 +42,9 @@ def _period_from_solution(sol):
 # Question 3(a): estimate the period at the supplied degradation rate.
 def estimate_period(vd):
     """Estimate the stable late-cycle period of nuclear PER."""
-    # YOUR CODE HERE
+    sol = simulate(vd)
+    period = _period_from_solution(sol)
+    return period
     raise NotImplementedError()
 
 

@@ -87,24 +87,31 @@ def oscillation_stats(N, H, alpha=ALPHA, discard=3, end=300, samples=12001):
 
     sol = solve_ivp(lambda t, x: goodwin_rhs(t, x, alpha, H),
                     [times[0], times[-1]], x0, t_eval=times, rtol=1e-8, atol=1e-10)
+    if not sol.success:
+            raise RuntimeError(sol.message)
 
     min_peak_to_trough_amplitude = 10**-2
     
-    peaks = find_peaks(sol.y[0], prominence=10**-2)[0][discard:]    
+    peaks = find_peaks(sol.y[0])[0][discard:]    
 
     if len(peaks) < 4:
         # All peaks that are there are discarded, and dont meet the requirement of 4 minimum peaks
         return (np.nan, np.nan)
 
-    
-    mean = np.mean(peaks)
-    std = np.std(peaks)
     time = np.diff(sol.t[peaks])
+    mean = np.mean(time)
+    std = np.std(time, ddof=1)
 
     coefficent_of_variation = std/mean # less than or equal to 1% (0.01)
-    relative_change = np.abs(np.ptp(peaks[-1]) - np.ptp(peaks[-2]))/(max(peaks[-1], peaks[-2]))
+    A_n = np.ptp(sol.y[0][peaks[-2]:peaks[-1] + 1])
 
-    if coefficent_of_variation <= 0.01 or relative_change <= 0.001:
+    if A_n < min_peak_to_trough_amplitude:
+        return (np.nan, np.nan)
+
+    A_n1 = np.ptp(sol.y[0][peaks[-3]:peaks[-2] + 1])
+    relative_change = np.abs(A_n - A_n1)/(max(A_n, A_n1))
+
+    if coefficent_of_variation > 0.01 or relative_change > 0.001:
         return (np.nan, np.nan)
     
     return (mean, std)

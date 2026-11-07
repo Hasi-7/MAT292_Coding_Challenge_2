@@ -27,14 +27,31 @@ def save_figure(fig, filename):
 # Question 2(a): implement the unscaled Goldbeter model.
 def goldbeter_rhs(t, x, p=PARAMS):
     """Evaluate the Goldbeter model for ``x = [M, P0, P1, P2, PN]``."""
-    # YOUR CODE HERE
+    J1 = (p["v1"]*x[1])/(p["k1"] + x[1])
+    J2 = (p["v2"]*x[2])/(p["k2"] + x[2])
+    J3 = (p["v3"]*x[2])/(p["k3"] + x[2])
+    J4 = (p["v4"]*x[3])/(p["k4"] + x[3])
+
+    dM = (p["vs"])/(1 + (x[4]/p["ki"])**p["n"]) - (p["vm"]*x[0])/(p["km1"] + x[0])
+    dP0 = p["ks"]*x[0] - J1 + J2
+    dP1 = J1 - J2 - J3 + J4
+    dP2 = J3 - J4 - p["kt1"]*x[3] + p["kt2"]*x[4] - (p["vd"]*x[3])/(p["kd"] + x[3])
+    dPN = p["kt1"]*x[3] - p["kt2"]*x[4]
+
+    return [dM, dP0, dP1, dP2, dPN]
     raise NotImplementedError()
 
 
 # Question 2(a): add timescale separation around the supplied model.
 def goldbeter_rhs_epsilon(t, x, p=PARAMS, epsilon=1.0):
     """Scale ``v1``--``v4`` by ``1/epsilon`` and call ``goldbeter_rhs``."""
-    # YOUR CODE HERE
+    scaled_params = p.copy()
+    scaled_params["v1"] = p["v1"]/epsilon
+    scaled_params["v2"] = p["v2"]/epsilon
+    scaled_params["v3"] = p["v3"]/epsilon
+    scaled_params["v4"] = p["v4"]/epsilon
+
+    return goldbeter_rhs(t, x , p=scaled_params)
     raise NotImplementedError()
 
 
@@ -60,14 +77,16 @@ def estimate_period(solution):
 # Question 2(b): count steps used by the full-model solver.
 def rk45_step_count(epsilon):
     """Run RK45 and return its number of time steps."""
-    # YOUR CODE HERE
+    sol = simulate(epsilon=epsilon)
+    return len(sol.t) - 1
     raise NotImplementedError()
 
 
 # Question 2(b): count steps used by the Radau solver.
 def radau_step_count(epsilon):
     """Run Radau and return its number of time steps."""
-    # YOUR CODE HERE
+    sol = simulate(epsilon=epsilon, method="Radau")
+    return len(sol.t) - 1
     raise NotImplementedError()
 
 
