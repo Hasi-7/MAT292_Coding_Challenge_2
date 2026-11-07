@@ -22,15 +22,11 @@ def goodwin_rhs(t, x, alpha, H):
     same length, using the last species to regulate the first and each earlier
     species to produce the next one.
     """
-    dx = []*len(x)
+    dx1 = ((alpha)/(1 + x[-1]**H)) - x[0]
+    dx_i = np.array(x[:-1] - x[1:])
 
-    for i in range(1, len(x)):
-        if i == 1:
-            dx[i-1] = (alpha)/(1 + x[i-1]**H)
-        else:
-            dx[i] = (alpha)*(((1)/(1 + x[i-1]**H)) - ((1)/(1 + x[i]**H)))
 
-    return np.array(dx)    
+    return np.concatenate((np.array([dx1]), dx_i))
     raise NotImplementedError()
 
 
@@ -57,7 +53,7 @@ def feedback_delay(N, alpha=ALPHA, H=8, threshold=0.1, end=300):
 
     sol = solve_ivp(
         lambda t, x: goodwin_rhs(t, x, alpha, H),
-        [0, end], x0, t_eval=times, rtol=1e-8, atol=1e-10,
+        [times[0], times[-1]], x0, t_eval=times, rtol=1e-8, atol=1e-10,
         events=my_event
     )
     if not sol.success:
@@ -85,7 +81,33 @@ def oscillation_stats(N, H, alpha=ALPHA, discard=3, end=300, samples=12001):
     You might want to use these functions (given in no particular order):
     np.std, np.ptp, find_peaks, np.mean
     """
-    # YOUR CODE HERE
+
+    x0 = np.ones(N)
+    times = np.linspace(0, end, samples)
+
+    sol = solve_ivp(lambda t, x: goodwin_rhs(t, x, alpha, H),
+                    [times[0], times[-1]], x0, t_eval=times, rtol=1e-8, atol=1e-10)
+
+    min_peak_to_trough_amplitude = 10**-2
+    
+    peaks = find_peaks(sol.y[0], prominence=10**-2)[0][discard:]    
+
+    if len(peaks) < 4:
+        # All peaks that are there are discarded, and dont meet the requirement of 4 minimum peaks
+        return (np.nan, np.nan)
+
+    
+    mean = np.mean(peaks)
+    std = np.std(peaks)
+    time = np.diff(sol.t[peaks])
+
+    coefficent_of_variation = std/mean # less than or equal to 1% (0.01)
+    relative_change = np.abs(np.ptp(peaks[-1]) - np.ptp(peaks[-2]))/(max(peaks[-1], peaks[-2]))
+
+    if coefficent_of_variation <= 0.01 or relative_change <= 0.001:
+        return (np.nan, np.nan)
+    
+    return (mean, std)
     raise NotImplementedError()
 
 
