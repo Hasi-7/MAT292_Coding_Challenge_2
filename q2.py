@@ -38,7 +38,7 @@ def goldbeter_rhs(t, x, p=PARAMS):
     dP2 = J3 - J4 - p["kt1"]*x[3] + p["kt2"]*x[4] - (p["vd"]*x[3])/(p["kd"] + x[3])
     dPN = p["kt1"]*x[3] - p["kt2"]*x[4]
 
-    return [dM, dP0, dP1, dP2, dPN]
+    return np.array([dM, dP0, dP1, dP2, dPN])
     raise NotImplementedError()
 
 

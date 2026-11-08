@@ -76,12 +76,13 @@ if __name__ == "__main__":
     # An outline of how to use gradient descent on a selected gene set is given below
     # The gradient_calculator is the function you would need to write
     # using the ideas from Q3.
-    GENES = ["ROR"]
+    GENES = ["CRY1"]
     p_edit = candidate(GENES)
 
     result = evaluate_parameters(p_edit) 
     print_objective(result, p_edit, "OPTIMIZED CANDIDATE") # Score the final vector after your algorithm.
     plot_model(p_edit)
+    print(p_edit)
     # Check the final score against the assignment threshold (higher is better). 
     score_improvement = result["score_improvement_percent"]  # Percent improvement in the full score J.
     if score_improvement is None:
