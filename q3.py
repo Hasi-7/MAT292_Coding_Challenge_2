@@ -51,14 +51,15 @@ def estimate_period(vd):
 # Question 3(b): compute the centered finite-difference sensitivity.
 def finite_difference(h):
     """Return the centered estimate of dT/dvd using physical step h."""
-    # YOUR CODE HERE
+    vd = PARAMS["vd"]
+    return (estimate_period(vd + h) - estimate_period(vd - h))/(2*h)
     raise NotImplementedError()
 
 
 # Question 3(c): apply Richardson extrapolation to the centered difference.
 def richardson(h):
     """Return the fourth-order estimate built from two centered differences."""
-    # YOUR CODE HERE
+    return (4*finite_difference(h/2) - finite_difference(h))/3
     raise NotImplementedError()
 
 
