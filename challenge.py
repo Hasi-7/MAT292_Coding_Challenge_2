@@ -18,7 +18,7 @@ def cost(q, p_rep, indices):
 def candidate(genes, p_rep = REPORTER_PARAMETERS.copy()):
     indices = gene_indices(genes)
     bounds = [
-    (0.5 * REPORTER_PARAMETERS[i], 1.5 * REPORTER_PARAMETERS[i])
+    (0.01 * REPORTER_PARAMETERS[i], 2.5 * REPORTER_PARAMETERS[i])
     for i in indices
     ]
 
@@ -26,7 +26,7 @@ def candidate(genes, p_rep = REPORTER_PARAMETERS.copy()):
         cost, 
         bounds=bounds,
         args=(p_rep, indices,),
-        rng=np.random.default_rng(42))
+        rng=np.random.default_rng(123))
 
     if not result.success:
         raise RuntimeError(result.message)
