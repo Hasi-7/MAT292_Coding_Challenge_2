@@ -5,9 +5,36 @@ from challenge_utils import (
     evaluate_parameters,  # (parameters) -> objective and components
     plot_model,           # (parameters, filename="challenge_clock.png") -> saves a plot
     print_objective,      # (result, parameters, title) -> prints a formatted report
+    simulate,
 )
 from constants import REPORTER_PARAMETERS, GROUP_INDICES
+from scipy.optimize import differential_evolution
 
+def cost(q, p_rep, indices):
+    p_trial = p_rep.copy()
+    p_trial[indices] = q
+    return evaluate_parameters(p_trial)["objective"]
+
+def candidate(genes, p_rep = REPORTER_PARAMETERS.copy()):
+    indices = gene_indices(genes)
+    bounds = [
+    (0.5 * REPORTER_PARAMETERS[i], 1.5 * REPORTER_PARAMETERS[i])
+    for i in indices
+    ]
+
+    result = differential_evolution(
+        cost, 
+        bounds=bounds,
+        args=(p_rep, indices,),
+        rng=np.random.default_rng(42))
+
+    if not result.success:
+        raise RuntimeError(result.message)
+    
+    p_edit = p_rep.copy()
+    p_edit[indices] = result.x
+
+    return p_edit
 
 
 # Functions imported from challenge_utils:
@@ -45,47 +72,16 @@ if __name__ == "__main__":
     # Keep the reporter reference unchanged.
     p_rep = REPORTER_PARAMETERS.copy()
 
-    # Simulate, measure the period, and evaluate the scalar objective.
-    result = evaluate_parameters(p_rep)
-    print_objective(result, p_rep, "DO NOTHING: REPORTER BASELINE")
-
-    # The following is a bad example for an edit. It includes a small noise edit
-    # on two forbidden entries.
-    rng = np.random.default_rng(1)
-    p_noise = p_rep.copy()
-    p_noise[3:5] *= 1 + rng.normal(0, 0.001, 2)  # vdp and kdp are forbidden.
-    noise_result = evaluate_parameters(p_noise)
-    print_objective(noise_result, p_noise, "RANDOM NOISE: FORBIDDEN PARAMETERS")
-
-    # The following is a legal example, but without much improvement.
-    # The available genes are: PER, CRY1, CRY2, ROR, REV, BMAL.
-    # Let's work with a short vector that contains only the selected genes.
-    GENES = ["CRY1","ROR","BMAL"]
-    indices = gene_indices(GENES)
-    pnew = p_rep[indices].copy()
-    pnew *= 1.1                         # Increase each selected parameter by 10%.
-    p_edit = update_pars(p_rep, pnew, GENES)  # Keep every other entry unchanged
-    
-    # display result and plot solution
-    result = evaluate_parameters(p_edit)  
-    print_objective(result, p_edit, "SINGLE EDIT: SELECTED GENES +10%")
-    plot_model(p_edit)
-
     # This is the part where you would create your own p_edit
     # An outline of how to use gradient descent on a selected gene set is given below
     # The gradient_calculator is the function you would need to write
     # using the ideas from Q3.
-    # GENES = ["CRY1"]
-    # q = p_rep[gene_indices(GENES)].copy()  # Optimize only these gene values
-    # def objective_for_q(q):                 # Every trial obeys the constraint
-    #     p_trial = update_pars(p_rep, q, GENES)
-    #     return evaluate_parameters(p_trial)["objective"]
-    # for iteration in range(steps):
-    #     gradient = gradient_calculator(objective_for_q, q)  # You implement this
-    #     q = q - step_size * gradient
-    # p_edit = update_pars(p_rep, q, GENES)
+    GENES = ["ROR"]
+    p_edit = candidate(GENES)
 
-    result = evaluate_parameters(p_edit)  # Score the final vector after your algorithm.
+    result = evaluate_parameters(p_edit) 
+    print_objective(result, p_edit, "OPTIMIZED CANDIDATE") # Score the final vector after your algorithm.
+    plot_model(p_edit)
     # Check the final score against the assignment threshold (higher is better). 
     score_improvement = result["score_improvement_percent"]  # Percent improvement in the full score J.
     if score_improvement is None:
