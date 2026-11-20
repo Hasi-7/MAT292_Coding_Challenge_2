@@ -248,7 +248,7 @@ def print_objective(result, parameters=REPORTER_PARAMETERS, title="Objective rep
     print(f" {title:^62} ")
     print("="*64)
     print(f"  {'Objective J':<34}{score:>12.6f}")
-    value = f"{improvement:.2f}%" if improvement is not None else "not scored"
+    value = f"{improvement:.30f}%" if improvement is not None else "not scored"
     print(f"  {'Score improvement':<34}{value:>12}")
     recovery = result.get("recovery_improvement_percent")
     if recovery is not None:
